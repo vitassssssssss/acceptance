@@ -9,10 +9,14 @@ final class LoginViewController: UIViewController {
     private let passwordField = UITextField()
     private let loginButton = UIButton(type: .system)
     private let statusLabel = UILabel()
+    private let initialStatusMessage: String?
+    private let initialStatusIsError: Bool
 
-    init(api: APIClient, tokenStore: TokenStore) {
+    init(api: APIClient, tokenStore: TokenStore, statusMessage: String? = nil, isError: Bool = false) {
         self.api = api
         self.tokenStore = tokenStore
+        self.initialStatusMessage = statusMessage
+        self.initialStatusIsError = isError
         super.init(nibName: nil, bundle: nil)
         title = "Login"
     }
@@ -34,6 +38,10 @@ final class LoginViewController: UIViewController {
 
         statusLabel.textColor = .secondaryLabel
         statusLabel.numberOfLines = 0
+        if let initialStatusMessage {
+            statusLabel.text = initialStatusMessage
+            statusLabel.textColor = initialStatusIsError ? .systemRed : .secondaryLabel
+        }
 
         let stack = UIStackView(arrangedSubviews: [usernameField, passwordField, loginButton, statusLabel])
         stack.axis = .vertical
@@ -49,6 +57,7 @@ final class LoginViewController: UIViewController {
     @objc private func loginTap() {
         view.endEditing(true)
         statusLabel.text = "Logging in..."
+        statusLabel.textColor = .secondaryLabel
         let u = usernameField.text ?? ""
         let p = passwordField.text ?? ""
         api.obtainToken(email: u, password: p) { [weak self] result in
@@ -60,6 +69,7 @@ final class LoginViewController: UIViewController {
                     self?.goToProfile()
                 case .failure(let err):
                     self?.statusLabel.text = "Error: \(err.localizedDescription)"
+                    self?.statusLabel.textColor = .systemRed
                 }
             }
         }
